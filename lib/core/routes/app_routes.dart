@@ -1,0 +1,37 @@
+abstract class AppRoutes {
+  static const onboarding = '/onboarding';
+  static const login = '/login';
+  static const register = '/register';
+  static const usernameSetup = '/username-setup';
+  static const home = '/home';
+  static const startwriting = '/start-writing';
+  static const todayquestion = '/todays-question';
+  static const floatbook = '/float-book';
+  static const chapterdetail = '/chapter-detail';
+  static const main = '/main';
+  static const timeCapsuleList = '/time-capsule-list';
+  static const timeCapsuleCreate = '/time-capsule-create';
+  static const sharedHome = '/shared-home';
+  static const peopleITrust = '/people-i-trust';
+  static const addSomeone = '/add-someone';
+  static const chooseMemory = '/choose-memory';
+  static const reviewShare = '/review-share';
+  static const shareSuccess = '/share-success';
+  static const receivedSharedPage = '/received-shared-page';
+  static const personHistory = '/person-history';
+  static const splash = '/splash';
+  static const profile = '/profile';
+  static const music = '/music';
+  static const sound = '/sound';
+  static const notifications = '/notifications';
+  static const String choosePin = '/choose-pin';
+  static const String verifyCurrentPin = '/verify-current-pin';
+  static const helpSupport = '/help-support';
+  static const editProfile = '/edit-profile';
+  static const memoryTree = '/memory-tree';
+static const memoryDetail = '/memory-detail';
+static const String breatheScreen = '/breathe-screen';
+static const announcements = '/announcements';
+static const String tellMyStory = '/tell-my-story';
+static const String aiLog = '/ai-log';
+}
