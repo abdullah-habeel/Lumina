@@ -311,7 +311,7 @@ class DemoSeedService {
       'question': 'What does success look like to you now?',
       'body':
           'Waking up with something to work on that feels worth it. That is all. Not numbers or titles. Just work that means something and people who are glad you exist.',
-      'daysAgo': 9,
+      'daysAgo': 6,
       'tags': {
         'people': [],
         'emotions': ['clarity', 'contentment', 'purpose'],
@@ -326,7 +326,7 @@ class DemoSeedService {
       'question': 'What are you grateful for today?',
       'body':
           'The fact that I get to build things. Not everyone does. Some people spend their whole life doing work they hate. I spend mine making things that did not exist before. That is a privilege I try not to forget.',
-      'daysAgo': 8,
+      'daysAgo': 4,
       'tags': {
         'people': [],
         'emotions': ['gratitude', 'humility', 'purpose'],
@@ -341,7 +341,7 @@ class DemoSeedService {
       'question': 'What do you want to remember about this moment?',
       'body':
           'That I was trying. That I did not give up when things were uncertain. That I kept building even when I did not know if it would work. I want future me to know that past me showed up.',
-      'daysAgo': 5,
+      'daysAgo': 2,
       'tags': {
         'people': [],
         'emotions': ['determination', 'hope', 'pride'],
@@ -367,20 +367,25 @@ class DemoSeedService {
       final docId =
           '${seed['chapterId']}_${seed['questionId']}';
 
-      final entry = JournalEntry(
-        id: docId,
-        chapterId: seed['chapterId'] as String,
-        questionId: seed['questionId'] as String,
-        date: date,
-        question: seed['question'] as String,
-        body: seed['body'] as String,
-        imagePaths: const [],
-        tags: seed['tags'] as Map<String, dynamic>,
-        taggingStatus: 'complete',
-        inferenceSource: 'on_device',
-      );
+      final tags = seed['tags'] as Map<String, dynamic>;
+final significance = tags['significance'] as String? ?? 'medium';
+final significanceScore = significance == 'high' ? 8 : significance == 'medium' ? 5 : 2;
 
-      batch.set(_entriesRef.doc(docId), entry.toMap());
+final entry = JournalEntry(
+  id: docId,
+  chapterId: seed['chapterId'] as String,
+  questionId: seed['questionId'] as String,
+  date: date,
+  question: seed['question'] as String,
+  body: seed['body'] as String,
+  imagePaths: const [],
+  tags: tags,
+  taggingStatus: 'complete',
+  inferenceSource: 'on_device',
+  significanceScore: significanceScore,
+);
+
+      batch.set(_entriesRef.doc(docId), entry.toMap(), SetOptions(merge: false));
     }
 
     await batch.commit();

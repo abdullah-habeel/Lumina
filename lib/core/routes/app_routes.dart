@@ -34,4 +34,5 @@ static const String breatheScreen = '/breathe-screen';
 static const announcements = '/announcements';
 static const String tellMyStory = '/tell-my-story';
 static const String aiLog = '/ai-log';
+static const String emotionInsights = '/emotion-insights';
 }

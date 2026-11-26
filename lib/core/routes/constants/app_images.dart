@@ -66,6 +66,10 @@ abstract class AppImages {
   static const String teston= 'assets/images/teston.png';
   static const String lockopen= 'assets/images/lockopen.png';
   static const String sealWax= 'assets/images/seal_wax.png';
+  static const String emotion= 'assets/images/emotion.png';
+  static const String emotionleaf= 'assets/images/emotion_leaf.png';
+
+
 
 
 

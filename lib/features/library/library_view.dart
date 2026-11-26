@@ -10,6 +10,7 @@ import 'package:lumina/core/routes/constants/widgets/time_aware_background.dart'
 import 'package:lumina/features/home/widgets/sun_and_day_animation.dart';
 import 'package:lumina/features/library/widgets/animations/chapter_book_cover.dart';
 import 'package:lumina/features/library/widgets/animations/chapter_book_opener.dart';
+import 'package:lumina/features/library/widgets/insight_card.dart';
 import 'package:lumina/features/library/widgets/leather_chapter_card.dart';
 import 'package:lumina/features/music/controller/sound_effects_controller.dart';
 import 'package:lumina/features/music/widgets/music_screen_wrapper.dart';
@@ -194,6 +195,11 @@ class LibraryViewState extends State<LibraryView>
                                 },
                               ),
                             ),
+                            _AnimatedCard(
+  index: 2,
+  controller: _controller,
+  child: InsightsCard(),
+),
                           ],
                         ),
                       ),
@@ -292,4 +298,5 @@ class _AnimatedCard extends StatelessWidget {
     );
   }
 }
+
 

@@ -24,6 +24,8 @@ class HomeController extends GetxController {
 
   final RxString userName = 'there'.obs;
   final RxString profilePhotoUrl = ''.obs;
+  final RxnString lastEchoQuestion = RxnString(null);
+  final RxnString lastEchoInferenceSource = RxnString(null);
 
   // ============================================================
   // TREE KEY
@@ -77,6 +79,8 @@ class HomeController extends GetxController {
 
     loadUserName();
     _loadProfilePhoto();
+     _loadLastEchoQuestion();                                    // ← add this
+  ever(_journalController.entries, (_) => _loadLastEchoQuestion());
   }
 
   @override
@@ -364,4 +368,14 @@ class HomeController extends GetxController {
     if (leafIndex < 0 || leafIndex >= memories.length) return;
     Get.toNamed(AppRoutes.memoryDetail, arguments: memories[leafIndex]);
   }
+  void _loadLastEchoQuestion() {
+  final withEcho = _journalController.entries
+      .where((e) => e.echoQuestion != null && e.echoQuestion!.isNotEmpty)
+      .toList();
+
+  if (withEcho.isEmpty) return;
+lastEchoQuestion.value = withEcho.last.echoQuestion;
+lastEchoInferenceSource.value = withEcho.last.echoInferenceSource;
 }
+}
+

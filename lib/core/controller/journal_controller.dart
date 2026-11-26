@@ -1,21 +1,58 @@
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:lumina/core/routes/model/journel_entry_model.dart';
 import 'package:lumina/features/auth/service/journal_service.dart';
 
-class JournalController extends GetxController {
+class JournalController extends GetxController with WidgetsBindingObserver {
   final JournalService _service = JournalService();
 
   final RxList<JournalEntry> entries = <JournalEntry>[].obs;
   final RxBool isLoading = false.obs;
+  StreamSubscription<List<JournalEntry>>? _entriesSubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   bool _isDeleting = false;
 
   @override
   void onInit() {
     super.onInit();
-    _service.streamEntries().listen((list) {
-      if (_isDeleting) return;
-      entries.assignAll(list);
-    });
+    WidgetsBinding.instance.addObserver(this);
+    _entriesSubscription = _service.streamEntries().listen(
+      (list) {
+        if (_isDeleting) return;
+        entries.assignAll(list);
+      },
+      onError: (Object error) {
+        debugPrint('JOURNAL_CONTROLLER: Could not load entries — $error');
+      },
+    );
+    unawaited(_service.syncPendingEntries());
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      (results) {
+        if (results.any((result) => result != ConnectivityResult.none)) {
+          unawaited(_service.syncPendingEntries());
+        }
+      },
+      onError: (Object error) {
+        debugPrint('JOURNAL_CONTROLLER: Connectivity listener failed — $error');
+      },
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_service.syncPendingEntries());
+    }
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _entriesSubscription?.cancel();
+    _connectivitySubscription?.cancel();
+    super.onClose();
   }
 
   bool isAnswered(String chapterId, String questionId) {

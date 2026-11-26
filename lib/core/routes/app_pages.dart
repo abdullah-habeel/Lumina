@@ -12,6 +12,8 @@ import 'package:lumina/features/home/binding/home_binding.dart';
 import 'package:lumina/features/home/view/home_view.dart';
 import 'package:lumina/features/home/view/memory_detail_view.dart';
 import 'package:lumina/features/home/view/memory_tree_view.dart';
+import 'package:lumina/features/insights/insight_view.dart';
+import 'package:lumina/features/insights/insights_controller.dart';
 import 'package:lumina/features/library/library_view.dart';
 import 'package:lumina/features/music/view/music_selection_view.dart';
 import 'package:lumina/features/music/view/sound_selection_view.dart';
@@ -161,6 +163,12 @@ abstract class AppPages {
     GetPage(name: AppRoutes.memoryDetail, page: () => const MemoryDetailView()),
      GetPage(name: AppRoutes.tellMyStory, page: () => const StoryView()),
      GetPage(name: AppRoutes.aiLog, page: () => const AiLogView()),
+     GetPage(
+  name: AppRoutes.emotionInsights,
+  page: () => const InsightsView(),
+  binding: BindingsBuilder(() {
+    Get.put(InsightsController());
+  }),)
     
   ];
 }

@@ -5,11 +5,11 @@ import 'package:lumina/core/routes/constants/app_colors.dart';
 import 'package:lumina/core/routes/constants/widgets/time_aware_background.dart';
 import 'package:lumina/features/delete_leaf/controller/delete_leaf_controller.dart';
 import 'package:lumina/features/home/models/controller/home_controller.dart';
-import 'package:lumina/features/home/widgets/daily_quote_card.dart';
+import 'package:lumina/features/home/widgets/echo_card.dart';
 import 'package:lumina/features/home/widgets/home_header.dart';
 import 'package:lumina/features/home/widgets/sun_and_day_animation.dart';
+import 'package:lumina/features/home/widgets/tell_my_story_card.dart';
 import 'package:lumina/features/home/widgets/tree/growing_memory_tree.dart';
-import 'package:lumina/features/profile/widgets/profile_widgets.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -329,21 +329,19 @@ class HomeViewState extends State<HomeView>
                     ),
                     const SizedBox(height: 46),
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                      ),
-                      child: IconDataMenuTile(
-                        icon: Icons.auto_stories_outlined,
-                        title: 'Tell My Story',
-                        onTap: () => Get.toNamed(AppRoutes.tellMyStory),
-                      ),
-                    ),
+  padding: EdgeInsets.symmetric(
+    horizontal: horizontalPadding,
+  ),
+  child: TellMyStoryCard(
+    onTap: () => Get.toNamed(AppRoutes.tellMyStory),
+  ),
+),
                     const SizedBox(height: 24),
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: horizontalPadding,
                       ),
-                      child: const DailyQuoteCard(),
+                      child: const  EchoCard(),
                     ),
                   ],
                 ),
