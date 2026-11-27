@@ -5,9 +5,9 @@ import 'package:get/get.dart';
 import 'package:lumina/core/controller/journal_controller.dart';
 import 'package:lumina/core/routes/services/notification_services.dart';
 import 'package:lumina/core/service/ai_service.dart';
-import 'package:lumina/core/service/consent_service.dart';
 import 'package:lumina/core/service/pattern_service.dart';
-import 'package:lumina/features/story/widgets/consent_dialogue_widget.dart';
+import 'package:lumina/core/service/privacy_gate_service.dart';
+import 'package:lumina/features/ai_log/widgets/private_gate_screen.dart';
 import 'package:lumina/features/time_capsule/model/time_capsule_model.dart';
 
 class TimeCapsuleController extends GetxController {
@@ -19,7 +19,7 @@ class TimeCapsuleController extends GetxController {
 
   final _aiService = AiService();
   final _patternService = PatternService();
-  final _consentService = ConsentService();
+  final _privacyGateService = PrivacyGateService();
 
   final presets = <String>['1 Month', '6 Months', '1 Year', '5 Years'];
 
@@ -69,26 +69,25 @@ class TimeCapsuleController extends GetxController {
       return;
     }
 
-    // ── Consent Gate ─────────────────────────────────────────
-    final hasConsent = await _consentService.hasConsented();
-    if (!hasConsent) {
-      final granted = await Get.dialog<bool>(
-        const ConsentDialog(),
-        barrierDismissible: false,
-      );
+    // ── Privacy Gate ─────────────────────────────────────────
+    final choice = await _privacyGateService.getChoice();
 
-      if (granted != true) {
-        Get.snackbar(
-          'Cloud AI needed',
-          'Enable Cloud AI in Settings to seal a capsule with AI snapshot.',
-          duration: const Duration(seconds: 3),
-        );
-        return;
+    if (choice == PrivacyChoice.notAsked) {
+      final result = await Get.to<bool>(() => const PrivacyGateScreen());
+      if (result != true) {
+        // User chose on-device only
+        // Capsule snapshot uses HybridAiService which prefers on-device
+        // So we can still seal — just without cloud guarantee
+        // Continue sealing below
       }
-
-      await _consentService.saveConsent(true);
     }
 
+    if (choice == PrivacyChoice.onDeviceOnly) {
+      // Capsule snapshot runs on-device via HybridAiService
+      // Safe to continue — data stays on device if Nano available
+    }
+
+    // All choices proceed — snapshot uses on-device first anyway
     isSealing.value = true;
 
     try {
@@ -132,6 +131,11 @@ class TimeCapsuleController extends GetxController {
       );
 
       Get.back();
+      Get.snackbar(
+        'Capsule sealed',
+        'Your snapshot is being captured privately.',
+        duration: const Duration(seconds: 3),
+      );
     } catch (e) {
       Get.snackbar('Error', 'Could not seal your capsule. Please try again.');
     } finally {

@@ -4,7 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:lumina/core/controller/journal_controller.dart';
 import 'package:lumina/core/routes/constants/app_images.dart';
 import 'package:lumina/core/service/ai_service.dart';
+import 'package:lumina/core/service/connectivity_service.dart';
 import 'package:lumina/core/service/pattern_service.dart';
+import 'package:lumina/core/service/privacy_gate_service.dart';
+import 'package:lumina/features/ai_log/widgets/ondevice_summary_screen.dart';
+import 'package:lumina/features/ai_log/widgets/private_gate_screen.dart';
 import 'package:lumina/features/time_capsule/model/time_capsule_model.dart';
 
 class TimeCapsuleOpenView extends StatefulWidget {
@@ -19,6 +23,7 @@ class TimeCapsuleOpenView extends StatefulWidget {
 class _TimeCapsuleOpenViewState extends State<TimeCapsuleOpenView> {
   final _aiService = AiService();
   final _patternService = PatternService();
+  final _privacyGateService = PrivacyGateService();
 
   String? _revealText;
   bool _isLoadingReveal = false;
@@ -26,6 +31,51 @@ class _TimeCapsuleOpenViewState extends State<TimeCapsuleOpenView> {
   String? _revealError;
 
   Future<void> _generateReveal() async {
+    // ── Privacy Gate ─────────────────────────────────────────
+    // Capsule Reveal ALWAYS goes to cloud — needs explicit consent
+    final choice = await _privacyGateService.getChoice();
+
+    if (choice == PrivacyChoice.notAsked) {
+      final result = await Get.to<bool>(() => const PrivacyGateScreen());
+      if (result != true) {
+        // User chose on-device only — show on-device summary instead
+        final journalController = Get.find<JournalController>();
+        final entries = journalController.entries;
+        final pattern = _patternService.computePattern(entries);
+        await Get.to(() => OnDeviceSummaryScreen(patternSummary: pattern));
+        return;
+      }
+    }
+
+    if (choice == PrivacyChoice.onDeviceOnly) {
+      // Show on-device summary instead of reveal
+      final journalController = Get.find<JournalController>();
+      final entries = journalController.entries;
+      final pattern = _patternService.computePattern(entries);
+      await Get.to(() => OnDeviceSummaryScreen(patternSummary: pattern));
+      return;
+    }
+
+    // ── choice == cloudEnabled → proceed to reveal ──────────
+   // ── Connectivity check ─────────────────────────────────
+    final isConnected = await ConnectivityService().isConnected();
+    if (!isConnected) {
+      Get.snackbar(
+        'No internet connection',
+        'Connect to reveal how you have changed.',
+        backgroundColor: const Color(0xff3E2E1A),
+        colorText: const Color(0xffF4EBDD),
+        icon: const Icon(
+          Icons.wifi_off_rounded,
+          color: Color(0xffF4EBDD),
+        ),
+        duration: const Duration(seconds: 4),
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    // ── choice == cloudEnabled → proceed to reveal ──────────
     setState(() {
       _isLoadingReveal = true;
       _revealRequested = true;
@@ -36,25 +86,22 @@ class _TimeCapsuleOpenViewState extends State<TimeCapsuleOpenView> {
       final journalController = Get.find<JournalController>();
       final allEntries = journalController.entries;
 
-      // Memories written after sealing
       final memoriesSinceSealing = allEntries
           .where((e) => e.date.isAfter(widget.capsule.sealedDate))
           .where((e) => e.body != null && e.body!.trim().isNotEmpty)
           .map((e) => {'question': e.question, 'answer': e.body ?? ''})
           .toList();
 
-      // Current pattern
       final currentPattern = _patternService.computePattern(allEntries);
 
-      // Pattern at sealing — use locked snapshot or fallback to empty
       final patternAtSealing =
           widget.capsule.patternAtSealing ?? <String, dynamic>{
-            'totalMemories': 0,
-            'topPeople': 'none yet',
-            'topEmotions': 'none yet',
-            'topThemes': 'none yet',
-            'highSignificanceCount': 0,
-          };
+        'totalMemories': 0,
+        'topPeople': 'none yet',
+        'topEmotions': 'none yet',
+        'topThemes': 'none yet',
+        'highSignificanceCount': 0,
+      };
 
       final reveal = await _aiService.generateCapsuleReveal(
         originalMemory: widget.capsule.title,
@@ -226,13 +273,13 @@ class _RevealButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
+        const Text(
           'See how you have changed',
           style: TextStyle(
             fontFamily: 'Lora',
             fontSize: 14,
             fontStyle: FontStyle.italic,
-            color: const Color(0xff6B5D4B),
+            color: Color(0xff6B5D4B),
           ),
         ),
         const SizedBox(height: 14),
@@ -257,6 +304,28 @@ class _RevealButton extends StatelessWidget {
               ),
             ),
           ),
+        ),
+        const SizedBox(height: 12),
+        // ── Privacy reminder ──────────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.lock_outline_rounded,
+              size: 12,
+              color: Color(0xff8D7B69),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Names protected · Processed by cloud AI',
+              style: TextStyle(
+                fontFamily: 'Lora',
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: const Color(0xff8D7B69).withOpacity(0.7),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -383,6 +452,28 @@ class _RevealCard extends StatelessWidget {
               height: 1.8,
               color: Color(0xff3E2E1A),
             ),
+          ),
+          const SizedBox(height: 16),
+          // ── Privacy reminder ──────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 12,
+                color: Color(0xff8D7B69),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Names protected · Processed by cloud AI',
+                style: TextStyle(
+                  fontFamily: 'Lora',
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: const Color(0xff8D7B69).withOpacity(0.7),
+                ),
+              ),
+            ],
           ),
         ],
       ),

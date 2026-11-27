@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lumina/core/routes/constants/app_images.dart';
 
 class TellMyStoryCard extends StatefulWidget {
   final VoidCallback onTap;
@@ -15,7 +16,7 @@ class TellMyStoryCard extends StatefulWidget {
 class _TellMyStoryCardState extends State<TellMyStoryCard> {
   bool _pressed = false;
 
-  static const Color cream = Color(0xFFF5EBD5);
+  static const Color cream = Color(0xFFF5E0D8);
   static const Color green = Color(0xFF2F4F41);
   static const Color gold = Color(0xFFC79A4B);
   static const Color brown = Color(0xFF55402C);
@@ -48,7 +49,41 @@ class _TellMyStoryCardState extends State<TellMyStoryCard> {
                   ),
                 ),
 
-                // Small decorative stars
+                // Right-side flower asset
+                Positioned(
+                  right: 5,
+                  top: 8,
+                  bottom: 8,
+                  width: 85,
+                  child: IgnorePointer(
+                    child: Image.asset(
+                      AppImages.storycardright,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ),
+                ),
+
+                // Left-side flower asset (mirrored from right)
+                Positioned(
+                  left: 5,
+                  top: 8,
+                  bottom: 8,
+                  width: 85,
+                  child: IgnorePointer(
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()..scale(-1.0, 1.0),
+                      child: Image.asset(
+                        AppImages.storycardright,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.centerRight,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Left decorative stars
                 Positioned(
                   top: 35,
                   left: 35,
@@ -58,11 +93,6 @@ class _TellMyStoryCardState extends State<TellMyStoryCard> {
                   top: 58,
                   left: 70,
                   child: _star(9),
-                ),
-                Positioned(
-                  top: 35,
-                  right: 35,
-                  child: _star(15),
                 ),
 
                 // Main content
@@ -91,7 +121,7 @@ class _TellMyStoryCardState extends State<TellMyStoryCard> {
 
                       const SizedBox(height: 12),
 
-                      // Gold decorative divider
+                      // Decorative divider
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -133,7 +163,10 @@ class _TellMyStoryCardState extends State<TellMyStoryCard> {
                         decoration: BoxDecoration(
                           color: green,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: gold, width: 1),
+                          border: Border.all(
+                            color: gold,
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -187,7 +220,9 @@ class _TellMyStoryCardState extends State<TellMyStoryCard> {
 class _StoryCardClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    return _createCardPath(Rect.fromLTWH(0, 0, size.width, size.height));
+    return _createCardPath(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+    );
   }
 
   @override
@@ -247,11 +282,21 @@ class _StoryBorderPainter extends CustomPainter {
       ..strokeWidth = 0.8;
 
     final outerPath = _createCardPath(
-      Rect.fromLTWH(1.5, 1.5, size.width - 3, size.height - 3),
+      Rect.fromLTWH(
+        1.5,
+        1.5,
+        size.width - 3,
+        size.height - 3,
+      ),
     );
 
     final innerPath = _createCardPath(
-      Rect.fromLTWH(7, 7, size.width - 14, size.height - 14),
+      Rect.fromLTWH(
+        7,
+        7,
+        size.width - 14,
+        size.height - 14,
+      ),
     );
 
     canvas.drawPath(outerPath, outerPaint);

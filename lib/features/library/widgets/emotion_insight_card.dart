@@ -4,7 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/routes/app_routes.dart';
 
 class InsightsCard extends StatelessWidget {
-  const InsightsCard({super.key});
+  // ignore: non_constant_identifier_names
+  const InsightsCard.EmotionInsightCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,10 +16,7 @@ class InsightsCard extends StatelessWidget {
         height: 100,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: const Color(0xFFC9A84C),
-            width: 1.5,
-          ),
+          border: Border.all(color: const Color(0xFFC9A84C), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF50370A).withOpacity(0.10),
@@ -29,11 +27,7 @@ class InsightsCard extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-            colors: [
-              Color(0xFFD6DFB8),
-              Color(0xFFEDE8C4),
-              Color(0xFFF5EDCD),
-            ],
+            colors: [Color(0xFFD6DFB8), Color(0xFFEDE8C4), Color(0xFFF5EDCD)],
             stops: [0.0, 0.32, 1.0],
           ),
         ),

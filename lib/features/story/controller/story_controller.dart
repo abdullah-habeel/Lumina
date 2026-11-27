@@ -3,14 +3,16 @@ import 'package:get/get.dart';
 import 'package:lumina/core/controller/journal_controller.dart';
 import 'package:lumina/core/routes/model/journel_entry_model.dart';
 import 'package:lumina/core/service/ai_service.dart';
-import 'package:lumina/core/service/consent_service.dart';
+import 'package:lumina/core/service/connectivity_service.dart';
 import 'package:lumina/core/service/pattern_service.dart';
-import 'package:lumina/features/story/widgets/consent_dialogue_widget.dart';
+import 'package:lumina/core/service/privacy_gate_service.dart';
+import 'package:lumina/features/ai_log/widgets/ondevice_summary_screen.dart';
+import 'package:lumina/features/ai_log/widgets/private_gate_screen.dart';
 
 class StoryController extends GetxController {
   final AiService _aiService = AiService();
   final PatternService _patternService = PatternService();
-  final ConsentService _consentService = ConsentService();
+  final PrivacyGateService _privacyGateService = PrivacyGateService();
   final JournalController _journalController = Get.find<JournalController>();
 
   // ── State ──────────────────────────────────────────────────
@@ -30,21 +32,46 @@ class StoryController extends GetxController {
       return;
     }
 
-    // ── Consent Gate ───────────────────────────────────────
-    final hasConsent = await _consentService.hasConsented();
-    if (!hasConsent) {
-      final granted = await Get.dialog<bool>(
-        const ConsentDialog(),
-        barrierDismissible: false,
-      );
+    // ── Privacy Gate ───────────────────────────────────────
+    final choice = await _privacyGateService.getChoice();
 
-      if (granted != true) {
-        errorMessage.value =
-            'Please allow Cloud AI to write your story.';
+    if (choice == PrivacyChoice.notAsked) {
+      final result = await Get.to<bool>(() => const PrivacyGateScreen());
+
+      if (result != true) {
+        // User chose on-device only — show on-device summary
+        final pattern = _patternService.computePattern(entries);
+        patternSummary.assignAll(pattern);
+        await Get.to(() => OnDeviceSummaryScreen(patternSummary: pattern));
         return;
       }
+    }
 
-      await _consentService.saveConsent(true);
+    if (choice == PrivacyChoice.onDeviceOnly) {
+      // User previously chose on-device only — show summary
+      final pattern = _patternService.computePattern(entries);
+      patternSummary.assignAll(pattern);
+      await Get.to(() => OnDeviceSummaryScreen(patternSummary: pattern));
+      return;
+    }
+
+    // ── choice == cloudEnabled → proceed to generation ─────
+    // ── Connectivity check ─────────────────────────────────
+    final isConnected = await ConnectivityService().isConnected();
+    if (!isConnected) {
+      Get.snackbar(
+        'No internet connection',
+        'Your memories are safe on-device. Connect to generate your story.',
+        backgroundColor: const Color(0xFF3B2F1E),
+        colorText: const Color(0xFFF5EBD5),
+        icon: const Icon(
+          Icons.wifi_off_rounded,
+          color: Color(0xFFF5EBD5),
+        ),
+        duration: const Duration(seconds: 4),
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
     }
 
     // ── Generate ───────────────────────────────────────────

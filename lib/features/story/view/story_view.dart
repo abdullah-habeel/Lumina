@@ -131,23 +131,52 @@ class StoryView extends StatelessWidget {
                 ),
 
               // Narrative text
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: Text(
-                      controller.currentNarrative,
-                      key: ValueKey(controller.showRich.value),
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 17,
-                        height: 1.8,
-                        color: AppColors.primaryGreen,
-                      ),
-                    ),
-                  ),
-                ),
+              // Narrative text
+Expanded(
+  child: SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: Text(
+            controller.currentNarrative,
+            key: ValueKey(controller.showRich.value),
+            style: GoogleFonts.cormorantGaramond(
+              fontSize: 17,
+              height: 1.8,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // ── Privacy reminder ──────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.lock_outline_rounded,
+              size: 12,
+              color: AppColors.primaryGreen.withOpacity(0.4),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Names protected · Processed by cloud AI',
+              style: GoogleFonts.cormorantGaramond(
+                fontSize: 12,
+                color: AppColors.primaryGreen.withOpacity(0.4),
+                fontStyle: FontStyle.italic,
               ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+),
 
               // Regenerate button
               Padding(

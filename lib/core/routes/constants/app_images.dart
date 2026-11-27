@@ -68,6 +68,9 @@ abstract class AppImages {
   static const String sealWax= 'assets/images/seal_wax.png';
   static const String emotion= 'assets/images/emotion.png';
   static const String emotionleaf= 'assets/images/emotion_leaf.png';
+  static const String storycardright= 'assets/images/storycard_right.png';
+
+
 
 
 

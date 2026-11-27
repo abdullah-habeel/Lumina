@@ -344,18 +344,33 @@ class JournalService {
         final echoQuestion = result['echoQuestion'] as String?;
         final echoInferenceSource = result['echoInferenceSource'] as String?;
 
-        await _entriesRef.doc(docId).update({
-          'tags': tags,
-          'taggingStatus': 'complete',
-          'inferenceSource': inferenceSource,
-          'significanceScore': significanceScore,
-          'echoQuestion': echoQuestion,
-          'echoInferenceSource': echoInferenceSource,
-        });
+       await _entriesRef.doc(docId).update({
+  'tags': tags,
+  'taggingStatus': 'complete',
+  'inferenceSource': inferenceSource,
+  'significanceScore': significanceScore,
+  'echoQuestion': echoQuestion,
+  'echoInferenceSource': echoInferenceSource,
+});
 
-        debugPrint(
-          'JOURNAL_SERVICE: Tagged entry $docId — source: $inferenceSource',
-        );
+debugPrint(
+  'JOURNAL_SERVICE: Tagged entry $docId — source: $inferenceSource',
+);
+debugPrint('JOURNAL_SERVICE: emotions = ${tags['emotions']}');
+
+// ── Show emotion snackbar ────────────────────────────────
+final emotions = (tags['emotions'] as List<dynamic>?)
+    ?.map((e) => e.toString())
+    .toList() ?? [];
+
+if (emotions.isNotEmpty) {
+  final sourceLabel = inferenceSource == 'ON_DEVICE' ? '📱 On-device' : '☁️ Cloud';
+  Get.showSnackbar(GetSnackBar(
+    message: '✨ ${emotions.join(' · ')}  •  $sourceLabel',
+    duration: const Duration(seconds: 3),
+    snackPosition: SnackPosition.TOP,
+  ));
+}
       } catch (e) {
         debugPrint('JOURNAL_SERVICE: Background tagging failed — $e');
         try {

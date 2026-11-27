@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -210,21 +211,21 @@ class HomeController extends GetxController {
       // THIS RUNS AFTER THE LEAF REACHES THE TREE.
       // ----------------------------------------------------------
       onComplete: () async {
-        debugPrint(
-          'HOME CONTROLLER: '
-          'Leaf reached tree. Saving entry now.',
-        );
+  debugPrint(
+    'HOME CONTROLLER: '
+    'Leaf reached tree. Saving entry now.',
+  );
 
-        await _journalController.addEntry(entry);
-        if (Get.isRegistered<ReviewController>()) {
-          Get.find<ReviewController>().onJournalEntrySaved();
-        }
+  await _journalController.addEntry(entry);
+if (Get.isRegistered<ReviewController>()) {
+  Get.find<ReviewController>().onJournalEntrySaved();
+}
 
-        debugPrint(
-          'HOME CONTROLLER: '
-          'Entry saved. Tree should now show new leaf.',
-        );
-      },
+debugPrint(
+  'HOME CONTROLLER: '
+  'Entry saved. Tree should now show new leaf.',
+);
+},
     );
   }
 
@@ -377,5 +378,6 @@ class HomeController extends GetxController {
 lastEchoQuestion.value = withEcho.last.echoQuestion;
 lastEchoInferenceSource.value = withEcho.last.echoInferenceSource;
 }
+
 }
 

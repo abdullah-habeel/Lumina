@@ -47,7 +47,7 @@ Required JSON structure:
 
 Rules per field:
 - people: only names explicitly mentioned (empty array if none)
-- emotions: only emotions clearly expressed (max 3)
+- emotions: emotions clearly expressed OR strongly implied by the situation (max 6)
 - themes: only topics clearly present like family, growth, loss, joy (max 3)
 - keywords: only important words directly from the entry (max 5)
 - significance: "high" if life-changing event, "medium" if notable, "low" if routine
@@ -57,6 +57,7 @@ Answer: $answer
 ''';
 
     final trace = FirebasePerformance.instance.newTrace('tag_memory');
+    //TODO: check in firebase
     await trace.start();
 
     try {

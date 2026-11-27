@@ -29,6 +29,7 @@ class ProfileViewState extends State<ProfileView>
   late final AnimationController _menuController;
   late final AnimationController _treePulseController;
   late final Animation<double> _treePulse;
+  int _statsKey = 0;
 
   // ── Demo seed tap counter (hidden trigger) ──────────────────
   int _logoTapCount = 0;
@@ -68,6 +69,7 @@ class ProfileViewState extends State<ProfileView>
   void playAnimation() {
     _menuController.reset();
     _menuController.forward();
+    setState(() => _statsKey++);
   }
 
   // ── Hidden demo trigger — tap avatar 7 times ────────────────
@@ -385,6 +387,7 @@ class ProfileViewState extends State<ProfileView>
                           children: [
                             Obx(
                               () => ProfileBookStats(
+                                key: ValueKey(_statsKey), // 👈 changed
                                 entries: controller.journalEntriesCount.value,
                                 trusted: controller.trustedPeopleCount.value,
                                 shared: controller.sharedMemoriesCount.value,
