@@ -6,7 +6,6 @@ import 'package:lumina/core/service/ai_service.dart';
 import 'package:lumina/core/service/connectivity_service.dart';
 import 'package:lumina/core/service/pattern_service.dart';
 import 'package:lumina/core/service/privacy_gate_service.dart';
-import 'package:lumina/features/ai_log/widgets/ondevice_summary_screen.dart';
 import 'package:lumina/features/ai_log/widgets/private_gate_screen.dart';
 
 class StoryController extends GetxController {
@@ -23,39 +22,57 @@ class StoryController extends GetxController {
   final RxString errorMessage = ''.obs;
   final RxMap<String, dynamic> patternSummary = <String, dynamic>{}.obs;
 
+  // ── View mode ──────────────────────────────────────────────
+  // true = on-device summary, false = cloud story
+  final RxBool showOnDevice = true.obs;
+
+  // ── On init — always compute pattern immediately ───────────
+  @override
+  void onInit() {
+    super.onInit();
+    _computePattern();
+  }
+
+  void _computePattern() {
+    final entries = _journalController.entries;
+    if (entries.isEmpty) return;
+    final pattern = _patternService.computePattern(entries);
+    patternSummary.assignAll(pattern);
+  }
+
+  // ── Switch tabs ────────────────────────────────────────────
+  void switchToOnDevice() {
+    showOnDevice.value = true;
+  }
+
+  Future<void> switchToCloud() async {
+  showOnDevice.value = false;
+}
+
   // ── Generate ───────────────────────────────────────────────
   Future<void> generateStory() async {
-    final entries = _journalController.entries;
+  final entries = _journalController.entries;
 
-    if (entries.isEmpty) {
-      errorMessage.value = 'Write some memories first.';
-      return;
+  if (entries.isEmpty) {
+    errorMessage.value = 'Write some memories first.';
+    return;
+  }
+
+  final choice = await _privacyGateService.getChoice();
+
+  if (choice == PrivacyChoice.notAsked) {
+    final result = await Get.to<bool>(() => const PrivacyGateScreen());
+    if (result != true) {
+      return; // stay on cloud tab
     }
+  }
 
-    // ── Privacy Gate ───────────────────────────────────────
-    final choice = await _privacyGateService.getChoice();
+      if (choice == PrivacyChoice.onDeviceOnly) {
+    await _privacyGateService.reset();
+    final result = await Get.to<bool>(() => const PrivacyGateScreen());
+    if (result != true) return;
+  }
 
-    if (choice == PrivacyChoice.notAsked) {
-      final result = await Get.to<bool>(() => const PrivacyGateScreen());
-
-      if (result != true) {
-        // User chose on-device only — show on-device summary
-        final pattern = _patternService.computePattern(entries);
-        patternSummary.assignAll(pattern);
-        await Get.to(() => OnDeviceSummaryScreen(patternSummary: pattern));
-        return;
-      }
-    }
-
-    if (choice == PrivacyChoice.onDeviceOnly) {
-      // User previously chose on-device only — show summary
-      final pattern = _patternService.computePattern(entries);
-      patternSummary.assignAll(pattern);
-      await Get.to(() => OnDeviceSummaryScreen(patternSummary: pattern));
-      return;
-    }
-
-    // ── choice == cloudEnabled → proceed to generation ─────
     // ── Connectivity check ─────────────────────────────────
     final isConnected = await ConnectivityService().isConnected();
     if (!isConnected) {
@@ -71,6 +88,7 @@ class StoryController extends GetxController {
         duration: const Duration(seconds: 4),
         snackPosition: SnackPosition.TOP,
       );
+      showOnDevice.value = true;
       return;
     }
 
@@ -95,14 +113,15 @@ class StoryController extends GetxController {
 
       basicNarrative.value = results[0];
       richNarrative.value = results[1];
-    } catch (e) {
-      errorMessage.value = 'Could not generate your story. Please try again.';
+        } catch (e) {
+      errorMessage.value = 'DEBUG: $e';
+      showOnDevice.value = true;
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ── Toggle ─────────────────────────────────────────────────
+  // ── Toggle basic/rich ──────────────────────────────────────
   void toggleMode() {
     showRich.value = !showRich.value;
   }

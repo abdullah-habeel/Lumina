@@ -10,16 +10,22 @@ class PatternService {
     final Map<String, int> peopleCounts = {};
     final Map<String, int> emotionCounts = {};
     final Map<String, int> themeCounts = {};
-    final Map<String, int> keywordCounts = {};
+   final Map<String, int> keywordCounts = {};
+final Map<String, int> inferenceSourceCounts = {};
 
     for (final entry in entries) {
       final tags = entry.tags;
       if (tags == null || tags.isEmpty) continue;
 
-      // ── Significance ───────────────────────────────────────
+           // ── Significance ───────────────────────────────────────
       final significance = tags['significance'] as String? ?? '';
       if (significance == 'high') highSignificanceCount++;
 
+      // ── Inference source ───────────────────────────────────
+      final source = entry.inferenceSource;
+      if (source != null && source.isNotEmpty && source != 'failed') {
+        inferenceSourceCounts[source] = (inferenceSourceCounts[source] ?? 0) + 1;
+      }
       // ── People ─────────────────────────────────────────────
       final people = tags['people'];
       if (people is List) {
@@ -67,8 +73,17 @@ class PatternService {
       'topPeople': _topN(peopleCounts, 5),
       'topEmotions': _topN(emotionCounts, 5),
       'topThemes': _topN(themeCounts, 5),
-      'topKeywords': _topN(keywordCounts, 10),
+       'topKeywords': _topN(keywordCounts, 10),
+      'dominantInferenceSource': _dominantSource(inferenceSourceCounts),
     };
+  }
+
+    /// Returns the most common inference source across entries.
+  String _dominantSource(Map<String, int> counts) {
+    if (counts.isEmpty) return 'unknown';
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.first.key; // 'on_device' or 'cloud'
   }
 
   /// Returns top N entries sorted by count, as a readable string.

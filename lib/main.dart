@@ -13,6 +13,7 @@ import 'package:lumina/core/routes/services/device_info_service.dart';
 import 'package:lumina/core/routes/services/notification_services.dart';
 import 'package:lumina/core/service/hybrid_ai_service.dart';
 import 'package:lumina/core/service/remote_config_service.dart';
+import 'package:lumina/features/home/widgets/sun_and_day_animation.dart';
 import 'package:lumina/features/music/controller/music_controller.dart';
 import 'package:lumina/features/music/controller/sound_effects_controller.dart';
 import 'package:lumina/features/notification/controller/notification_controller.dart';
@@ -83,7 +84,9 @@ Future<void> main() async {
   NotificationService().onNotificationTap.listen((payload) {
     NotificationService().handlePayload(payload);
   });
-
+ if (kDebugMode) {
+    DaylightDebug.hour = 14; // try 6, 9, 12, 15, 17.5, 19. Remove for real time.
+  }
   runApp(const MyApp());
 }
 

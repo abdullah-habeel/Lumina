@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import android.os.Bundle
 import com.google.firebase.Firebase
+import com.google.firebase.ai.DownloadStatus
 import com.google.firebase.ai.InferenceMode
 import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.OnDeviceModelOption
@@ -12,6 +13,7 @@ import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.PublicPreviewAPI
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +40,9 @@ class MainActivity : FlutterActivity() {
 
     @Volatile
     private var hybridModel: com.google.firebase.ai.GenerativeModel? = null
+    @Volatile
+    private var downloadProgressSink: EventChannel.EventSink? = null
+    private val progressChannelName = "com.example.lumina/download_progress"
 
     @OptIn(PublicPreviewAPI::class)
     private fun getHybridModel(): com.google.firebase.ai.GenerativeModel {
@@ -151,8 +156,86 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                 }
+                "startDownload" -> {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val model = getHybridModel()
+                            val extension = model.onDeviceExtension
+
+                            if (extension == null) {
+                                withContext(Dispatchers.Main) {
+                                    result.success(mapOf("status" to "UNSUPPORTED"))
+                                }
+                                return@launch
+                            }
+
+                            var totalBytes = 0L
+                            extension.download().collect { progress ->
+                                val percent: Int
+                                val done: Boolean
+
+                                when (progress) {
+                                    is DownloadStatus.DownloadStarted -> {
+                                        totalBytes = progress.bytesToDownload
+                                        percent = 1
+                                        done = false
+                                    }
+                                    is DownloadStatus.DownloadInProgress -> {
+                                        percent = if (totalBytes > 0)
+                                            (progress.totalBytesDownloaded * 100 / totalBytes)
+                                                .toInt().coerceIn(1, 99)
+                                        else 50
+                                        done = false
+                                    }
+                                    is DownloadStatus.DownloadCompleted -> {
+                                        percent = 100
+                                        done = true
+                                    }
+                                    is DownloadStatus.DownloadFailed -> {
+                                        percent = 0
+                                        done = true
+                                    }
+                                    else -> {
+                                        percent = 1
+                                        done = false
+                                    }
+                                }
+
+                                withContext(Dispatchers.Main) {
+                                    downloadProgressSink?.success(
+                                        mapOf("percent" to percent, "done" to done)
+                                    )
+                                }
+                            }
+
+                            withContext(Dispatchers.Main) {
+                                downloadProgressSink?.success(
+                                    mapOf("percent" to 100, "done" to true)
+                                )
+                                result.success(mapOf("status" to "AVAILABLE"))
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                result.error("DOWNLOAD_ERROR", e.message, null)
+                            }
+                        }
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
+
+        // ── EventChannel for download progress ──────────────────
+        EventChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            progressChannelName
+        ).setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                downloadProgressSink = events
+            }
+            override fun onCancel(arguments: Any?) {
+                downloadProgressSink = null
+            }
+        })
     }
 }

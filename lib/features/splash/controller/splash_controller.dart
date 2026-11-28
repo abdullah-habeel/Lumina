@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -5,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:lumina/core/routes/app_routes.dart';
 import 'package:lumina/core/routes/services/device_info_service.dart';
 import 'package:lumina/core/routes/services/notification_services.dart';
+import 'package:lumina/core/service/download_service.dart';
 import 'package:lumina/features/music/controller/music_controller.dart';
 import 'package:lumina/firebase_options.dart';
 
@@ -24,6 +27,8 @@ class SplashController extends GetxController {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      Get.put(OnDeviceDownloadService());
+unawaited(Get.find<OnDeviceDownloadService>().init());
       debugPrint('SPLASH: Firebase initialized');
 
       final currentUser = await FirebaseAuth.instance

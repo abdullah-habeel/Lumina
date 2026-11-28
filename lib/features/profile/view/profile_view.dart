@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lumina/core/controller/journal_controller.dart';
 import 'package:lumina/core/routes/app_routes.dart';
 import 'package:lumina/core/routes/constants/app_colors.dart';
 import 'package:lumina/core/routes/constants/app_icons.dart';
@@ -12,7 +13,6 @@ import 'package:lumina/features/notification/controller/notification_controller.
 import 'package:lumina/features/pin/controller/pin_controller.dart';
 import 'package:lumina/features/profile/widgets/animated_menu_tile.dart';
 import 'package:lumina/features/shared/controller/shared_controller.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../controller/profile_controller.dart';
 import '../widgets/profile_widgets.dart';
@@ -135,10 +135,14 @@ class ProfileViewState extends State<ProfileView>
                       duration: const Duration(seconds: 2),
                     );
                     await _demoSeedService.seedDemoData();
-                    Get.snackbar(
-                      'Done',
-                      'Demo data loaded. Restart the app to see it.',
-                    );
+
+                    // Reload entries so stats update without restart
+                    if (Get.isRegistered<JournalController>()) {
+                      await Get.find<JournalController>().refresh();
+                    }
+                    playAnimation();
+
+                    Get.snackbar('Done', 'Demo data loaded!');
                   } catch (e) {
                     Get.snackbar('Error', 'Could not seed demo data: $e');
                   }
@@ -169,6 +173,13 @@ class ProfileViewState extends State<ProfileView>
                   Navigator.pop(context);
                   try {
                     await _demoSeedService.clearDemoData();
+
+                    // Reload entries so stats update without restart
+                    if (Get.isRegistered<JournalController>()) {
+                      await Get.find<JournalController>().refresh();
+                    }
+                    playAnimation();
+
                     Get.snackbar('Done', 'Demo data cleared.');
                   } catch (e) {
                     Get.snackbar('Error', 'Could not clear demo data: $e');
@@ -317,51 +328,6 @@ class ProfileViewState extends State<ProfileView>
                                             : null,
                                       ),
                                     ),
-                                    if (controller.isUploadingPhoto.value)
-                                      Positioned.fill(
-                                        child: Container(
-                                          margin: const EdgeInsets.all(3),
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.black38,
-                                          ),
-                                          child: const Center(
-                                            child: SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 4.4,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    Positioned(
-                                      bottom: -2,
-                                      right: -2,
-                                      child: GestureDetector(
-                                        onTap: controller.isUploadingPhoto.value
-                                            ? null
-                                            : controller.pickAndUploadPhoto,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryGreen,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: AppColors.background,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.camera_alt,
-                                            size: 14,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -434,6 +400,49 @@ class ProfileViewState extends State<ProfileView>
                                           AnimatedMenuTile(
                                             index: 0,
                                             controller: _menuController,
+                                            child: IconDataMenuTile(
+                                              icon: Icons.auto_awesome,
+                                              title: 'Load Demo Data',
+                                              onTap: () => _showDemoSheet(),
+                                            ),
+                                          ),
+                                          AnimatedMenuTile(
+                                            index: 1,
+                                            controller: _menuController,
+                                            child: IconDataMenuTile(
+                                              icon: Icons.memory_outlined,
+                                              title: 'AI Inference Log',
+                                              onTap: () =>
+                                                  Get.toNamed(AppRoutes.aiLog),
+                                            ),
+                                          ),
+                                          AnimatedMenuTile(
+                                            index: 2,
+                                            controller: _menuController,
+                                            child: Obx(() {
+                                              final notificationsController =
+                                                  Get.find<
+                                                    NotificationsController
+                                                  >();
+                                              final hasUnread =
+                                                  notificationsController.items.any(
+                                                    (item) =>
+                                                        !notificationsController
+                                                            .isRead(item.id),
+                                                  );
+                                              return ProfileMenuTile(
+                                                icon: AppIcons.notifications,
+                                                title: 'Notifications',
+                                                showNotificationDot: hasUnread,
+                                                onTap: () => Get.toNamed(
+                                                  AppRoutes.notifications,
+                                                ),
+                                              );
+                                            }),
+                                          ),
+                                          AnimatedMenuTile(
+                                            index: 3,
+                                            controller: _menuController,
                                             child: ProfileMenuTile(
                                               icon: AppIcons.editProfile,
                                               title: 'Edit profile',
@@ -443,7 +452,7 @@ class ProfileViewState extends State<ProfileView>
                                             ),
                                           ),
                                           AnimatedMenuTile(
-                                            index: 1,
+                                            index: 4,
                                             controller: _menuController,
                                             child: Obx(() {
                                               final sharedController =
@@ -479,7 +488,7 @@ class ProfileViewState extends State<ProfileView>
                                             }),
                                           ),
                                           AnimatedMenuTile(
-                                            index: 2,
+                                            index: 5,
                                             controller: _menuController,
                                             child: Obx(() {
                                               final pinController =
@@ -531,7 +540,7 @@ class ProfileViewState extends State<ProfileView>
                                             }),
                                           ),
                                           AnimatedMenuTile(
-                                            index: 3,
+                                            index: 6,
                                             controller: _menuController,
                                             child: ProfileMenuTile(
                                               icon: AppIcons.music,
@@ -541,7 +550,7 @@ class ProfileViewState extends State<ProfileView>
                                             ),
                                           ),
                                           AnimatedMenuTile(
-                                            index: 4,
+                                            index: 7,
                                             controller: _menuController,
                                             child: ProfileMenuTile(
                                               icon: AppIcons.sound,
@@ -551,43 +560,7 @@ class ProfileViewState extends State<ProfileView>
                                             ),
                                           ),
                                           AnimatedMenuTile(
-                                            index: 5,
-                                            controller: _menuController,
-                                            child: Obx(() {
-                                              final notificationsController =
-                                                  Get.find<
-                                                    NotificationsController
-                                                  >();
-                                              final hasUnread =
-                                                  notificationsController.items.any(
-                                                    (item) =>
-                                                        !notificationsController
-                                                            .isRead(item.id),
-                                                  );
-                                              return ProfileMenuTile(
-                                                icon: AppIcons.notifications,
-                                                title: 'Notifications',
-                                                showNotificationDot: hasUnread,
-                                                onTap: () => Get.toNamed(
-                                                  AppRoutes.notifications,
-                                                ),
-                                              );
-                                            }),
-                                          ),
-
-                                          AnimatedMenuTile(
-                                            index: 6,
-                                            controller: _menuController,
-                                            child: IconDataMenuTile(
-                                              icon: Icons.memory_outlined,
-                                              title: 'AI Inference Log',
-                                              onTap: () =>
-                                                  Get.toNamed(AppRoutes.aiLog),
-                                            ),
-                                          ),
-
-                                          AnimatedMenuTile(
-                                            index: 7,
+                                            index: 8,
                                             controller: _menuController,
                                             child: ProfileMenuTile(
                                               icon: AppIcons.logout,

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:lumina/core/routes/constants/app_colors.dart';
+import 'package:lumina/core/routes/constants/widgets/day_light_colors.dart';
 import 'package:lumina/core/routes/constants/widgets/time_aware_background.dart';
 import 'package:lumina/features/ai_log/controller/ai_log_controller.dart';
+import 'package:lumina/features/home/widgets/sun_and_day_animation.dart';
 
 class AiLogView extends StatelessWidget {
   const AiLogView({super.key});
@@ -12,6 +13,9 @@ class AiLogView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(AiLogController());
+    final hour = DaylightTime.of(context);
+    final headingColor = DaylightAppColors.headingText(hour);
+    final subtextColor = DaylightAppColors.headingSubtext(hour);
 
     return TimeAwareBookBackground(
       child: Scaffold(
@@ -20,10 +24,10 @@ class AiLogView extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new,
               size: 18,
-              color: AppColors.primaryGreen,
+              color: headingColor,
             ),
             onPressed: () => Get.back(),
           ),
@@ -32,7 +36,7 @@ class AiLogView extends StatelessWidget {
             style: GoogleFonts.cormorantGaramond(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: AppColors.primaryGreen,
+              color: headingColor,
             ),
           ),
           centerTitle: true,
@@ -48,14 +52,14 @@ class AiLogView extends StatelessWidget {
                     Icon(
                       Icons.memory_outlined,
                       size: 48,
-                      color: AppColors.primaryGreen.withOpacity(0.3),
+                      color: subtextColor,
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'No AI operations yet.',
                       style: GoogleFonts.cormorantGaramond(
                         fontSize: 18,
-                        color: AppColors.primaryGreen.withOpacity(0.6),
+                        color: headingColor,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -64,7 +68,7 @@ class AiLogView extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: GoogleFonts.cormorantGaramond(
                         fontSize: 14,
-                        color: AppColors.primaryGreen.withOpacity(0.4),
+                        color: subtextColor,
                       ),
                     ),
                   ],
@@ -99,9 +103,7 @@ class _AiLogTile extends StatelessWidget {
 
   const _AiLogTile({required this.entry, required this.label});
 
-  
-
-    String _normalizeSource(String source) {
+  String _normalizeSource(String source) {
     return source.toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
   }
 
@@ -133,16 +135,20 @@ class _AiLogTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hour = DaylightTime.of(context);
+    final cardBg = DaylightAppColors.cardBackground(hour);
+    final border = DaylightAppColors.borderGold(hour);
+    final textColor = DaylightAppColors.cardText(hour);
+    final subtextColor = DaylightAppColors.cardSubtext(hour);
+
     final color = _sourceColor(entry.inferenceSource);
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.primaryGreen.withOpacity(0.04),
+        color: cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primaryGreen.withOpacity(0.12),
-        ),
+        border: Border.all(color: border.withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -172,7 +178,7 @@ class _AiLogTile extends StatelessWidget {
                   style: GoogleFonts.cormorantGaramond(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryGreen,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -182,7 +188,7 @@ class _AiLogTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.cormorantGaramond(
                     fontSize: 13,
-                    color: AppColors.primaryGreen.withOpacity(0.65),
+                    color: subtextColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -190,7 +196,7 @@ class _AiLogTile extends StatelessWidget {
                   DateFormat('MMM d, yyyy').format(entry.date),
                   style: GoogleFonts.cormorantGaramond(
                     fontSize: 12,
-                    color: AppColors.primaryGreen.withOpacity(0.45),
+                    color: subtextColor,
                   ),
                 ),
               ],

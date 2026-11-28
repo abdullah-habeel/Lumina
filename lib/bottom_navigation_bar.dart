@@ -44,44 +44,58 @@ class BottomNavController extends GetxController {
   }
 }
 
-class BottomNavScreen extends StatelessWidget {
+class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});
 
-  static final _libraryKey = GlobalKey<LibraryViewState>();
-  static final _profileKey = GlobalKey<ProfileViewState>();
   static final homeKey = GlobalKey<HomeViewState>();
-  static final _sharedKey = GlobalKey<SharedHomeViewState>();
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(BottomNavController());
+  State<BottomNavScreen> createState() => _BottomNavScreenState();
+}
 
-    final pages = [
+class _BottomNavScreenState extends State<BottomNavScreen> {
+  final _libraryKey = GlobalKey<LibraryViewState>();
+  final _profileKey = GlobalKey<ProfileViewState>();
+  final _sharedKey = GlobalKey<SharedHomeViewState>();
+
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
       HomeView(key: BottomNavScreen.homeKey),
       SharedHomeView(key: _sharedKey),
       const SizedBox.shrink(),
       LibraryView(key: _libraryKey),
       ProfileView(key: _profileKey),
     ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.put(BottomNavController());
 
     return MusicScreenWrapper(
-      child: Obx(
-        () => Scaffold(
-          extendBody: true,
-          backgroundColor: Colors.transparent,
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: IndexedStack(
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Obx(
+                () => IndexedStack(
                   index: controller.currentIndex.value,
-                  children: pages,
+                  children: _pages,
                 ),
               ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: HomeBottomNav(
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Obx(
+                () => HomeBottomNav(
                   currentIndex: controller.currentIndex.value,
                   onTap: (index) {
                     if (index == 0) {
@@ -101,8 +115,8 @@ class BottomNavScreen extends StatelessWidget {
                   },
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

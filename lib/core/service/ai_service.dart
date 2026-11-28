@@ -166,6 +166,11 @@ return {
     await trace.start();
 
     try {
+           final insights = patternSummary['insights'];
+      final insightsText = (insights is List && insights.isNotEmpty)
+          ? insights.join('\n- ')
+          : 'No insights yet.';
+
       final response = await _templateModel.generateContent(
         'lumina-rich-narrative',
         inputs: {
@@ -175,7 +180,8 @@ return {
           'top_themes': '${patternSummary['topThemes']}',
           'high_significance_count':
               '${patternSummary['highSignificanceCount']}',
-          'memories_text': memoriesText, // masked — no real names reach the cloud
+          'memories_text': memoriesText,
+          'pattern_insights': '- $insightsText',
         },
       );
       trace.putAttribute('source', 'cloud_template');

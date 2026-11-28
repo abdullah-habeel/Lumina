@@ -5,6 +5,8 @@ class AppColors {
 
   static const Color background = Color(0xFFeee4cb); //        f2e9d5
   static const Color red = Colors.red;
+  static const Color white = Colors.white;
+
 
   static const Color cardBackground = Color(0xFFFAF4E6);
   static const Color sidebarDark = Color(0xFF2A2419);

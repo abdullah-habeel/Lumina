@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:lumina/core/routes/app_routes.dart';
 import 'package:lumina/core/routes/constants/app_colors.dart';
 import 'package:lumina/core/routes/constants/widgets/time_aware_background.dart';
+import 'package:lumina/core/service/download_service.dart';
 import 'package:lumina/features/delete_leaf/controller/delete_leaf_controller.dart';
 import 'package:lumina/features/home/models/controller/home_controller.dart';
 import 'package:lumina/features/home/widgets/echo_card.dart';
@@ -209,10 +210,90 @@ class HomeViewState extends State<HomeView>
             // ------------------------------------------------------
             // MAIN CONTENT
             // ------------------------------------------------------
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 16, bottom: 130),
-                child: Column(
+           SafeArea(
+  child: Column(
+    children: [
+      Obx(() {
+        final svc = Get.find<OnDeviceDownloadService>();
+        final status = svc.status.value;
+        final percent = svc.percent.value;
+        // TODO: Remove this banner before production release
+
+        if (status == 'DOWNLOADING') {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: const Color(0xFF2F4F41).withOpacity(0.08),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.download_rounded, size: 14, color: Color(0xFF2F4F41)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Downloading on-device AI… $percent%',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2F4F41),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: percent / 100,
+                    minHeight: 4,
+                    backgroundColor: const Color(0xFF2F4F41).withOpacity(0.15),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2F4F41)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+// TODO: Remove this banner before production release
+        if (status == 'UNSUPPORTED') {
+  return Dismissible(
+    key: const Key('unsupported_banner'),
+    direction: DismissDirection.horizontal,
+    onDismissed: (_) {
+      Get.find<OnDeviceDownloadService>().status.value = '';
+    },
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: const Color(0xFFC79A4B).withOpacity(0.08),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFFC79A4B)),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'On-device AI not supported on this device.',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFC79A4B),
+              ),
+            ),
+          ),
+          const Icon(Icons.swipe_rounded, size: 14, color: Color(0xFFC79A4B)),
+        ],
+      ),
+    ),
+  );
+}
+
+        return const SizedBox.shrink();
+      }),
+      Expanded(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(top: 16, bottom: 130),
+          child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ------------------------------------------------
@@ -341,15 +422,18 @@ class HomeViewState extends State<HomeView>
                       padding: EdgeInsets.symmetric(
                         horizontal: horizontalPadding,
                       ),
-                      child: const  EchoCard(),
+                                         child: const  EchoCard(),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ),        // ← closes Expanded
+          ],          // ← closes Column children
+        ),            // ← closes Column
+      ),              // ← closes SafeArea
+    ],
+  ),
+),
     );
   }
 }

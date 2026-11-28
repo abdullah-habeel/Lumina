@@ -6,6 +6,26 @@ import 'package:lumina/core/service/analystics_service.dart';
 class HybridAiService {
   static const MethodChannel _channel =
       MethodChannel('com.example.lumina/hybrid_ai');
+      static const EventChannel _progressChannel =
+    EventChannel('com.example.lumina/download_progress');
+
+Stream<Map<String, dynamic>> get downloadProgressStream {
+  return _progressChannel.receiveBroadcastStream().map(
+    (event) => Map<String, dynamic>.from(event as Map),
+  );
+}
+
+Future<void> startDownload() async {
+  try {
+    await _channel.invokeMethod('startDownload');
+  } on PlatformException catch (e, stack) {
+    FirebaseCrashlytics.instance.recordError(
+      e, stack,
+      reason: 'startDownload failed',
+      fatal: false,
+    );
+  }
+}
 
   Future<String> prepareOnDeviceModel() async {
     try {
@@ -65,14 +85,14 @@ class HybridAiService {
         'text': result?['text'] ?? '',
         'inferenceSource': inferenceSource,
       };
-    } on PlatformException catch (e, stack) {
+       } on PlatformException catch (e, stack) {
       FirebaseCrashlytics.instance.recordError(
         e,
         stack,
         reason: 'generateHybrid failed',
         fatal: false,
       );
-      throw Exception('Hybrid generation failed: ${e.message}');
+      throw Exception('Hybrid generation failed: CODE=${e.code} MSG=${e.message} DETAILS=${e.details}');
     }
   }
 }

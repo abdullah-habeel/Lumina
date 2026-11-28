@@ -109,7 +109,7 @@ class JournalController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  Future<void> deleteEntry(JournalEntry entry) async {
+    Future<void> deleteEntry(JournalEntry entry) async {
     _isDeleting = true;
     entries.removeWhere(
       (e) => e.chapterId == entry.chapterId && e.questionId == entry.questionId,
@@ -117,4 +117,18 @@ class JournalController extends GetxController with WidgetsBindingObserver {
     await _service.deleteEntry(entry);
     _isDeleting = false;
   }
+
+  Future<void> refresh() async {
+    _entriesSubscription?.cancel();
+    _entriesSubscription = _service.streamEntries().listen(
+      (list) {
+        if (_isDeleting) return;
+        entries.assignAll(list);
+      },
+      onError: (Object error) {
+        debugPrint('JOURNAL_CONTROLLER: Could not load entries — $error');
+      },
+    );
+  }
+
 }
